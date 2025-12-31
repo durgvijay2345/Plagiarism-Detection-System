@@ -1,43 +1,35 @@
-# Frontend Dockerfile (alternative to Vercel)
-FROM node:20-alpine AS base
+# ✅ Use Python 3.10 (FULLY COMPATIBLE with sklearn)
+FROM python:3.10-slim
 
-# Install dependencies only when needed
-FROM base AS deps
+# Set working directory
 WORKDIR /app
 
-# Copy package files
-COPY package.json package-lock.json* ./
-RUN npm ci
+# Install system dependencies (needed for numpy / sklearn)
+RUN apt-get update && apt-get install -y \
+    build-essential \
+    && rm -rf /var/lib/apt/lists/*
 
-# Rebuild the source code only when needed
-FROM base AS builder
-WORKDIR /app
-COPY --from=deps /app/node_modules ./node_modules
+# Copy requirements first (better caching)
+COPY requirements.txt .
+
+# Upgrade pip & install dependencies
+RUN pip install --upgrade pip \
+    && pip install --no-cache-dir -r requirements.txt
+
+# Download NLTK data at build time
+RUN python - <<EOF
+import nltk
+nltk.download('punkt')
+nltk.download('stopwords')
+nltk.download('punkt_tab')
+EOF
+
+# Copy rest of the code
 COPY . .
 
-# Set environment variable for API URL (can be overridden at runtime)
-ENV NEXT_PUBLIC_API_URL=http://localhost:5000
+# Expose Render port
+EXPOSE 10000
 
-RUN npm run build
+# Run with Gunicorn (PRODUCTION SAFE)
+CMD ["gunicorn", "app_simple:app", "--bind", "0.0.0.0:10000"]
 
-# Production image, copy all the files and run next
-FROM base AS runner
-WORKDIR /app
-
-ENV NODE_ENV=production
-
-RUN addgroup --system --gid 1001 nodejs
-RUN adduser --system --uid 1001 nextjs
-
-COPY --from=builder /app/public ./public
-COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
-COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
-
-USER nextjs
-
-EXPOSE 3000
-
-ENV PORT=3000
-ENV HOSTNAME="0.0.0.0"
-
-CMD ["node", "server.js"]
