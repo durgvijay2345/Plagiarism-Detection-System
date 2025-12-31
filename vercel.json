@@ -1,0 +1,3 @@
+{
+  "ignoreCommand": "test -d backend && echo 'Ignoring backend' || exit 0"
+}
