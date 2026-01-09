@@ -31,4 +31,5 @@ COPY . .
 EXPOSE 10000
 
 # Run with Gunicorn (PRODUCTION SAFE)
-CMD ["gunicorn", "app_simple:app", "--bind", "0.0.0.0:10000"]
+CMD ["gunicorn", "app:app", "--bind", "0.0.0.0:10000", "--workers", "2", "--threads", "4"]
+
