@@ -357,11 +357,11 @@ def check_plagiarism():
 
 if __name__ == '__main__':
     print("\n" + "="*60)
-    print("🚀 Starting Plagiarism Detection API Server")
+    print(" Starting Plagiarism Detection API Server")
     print("="*60)
-    print(f"✅ Server running on: http://localhost:5000")
-    print(f"✅ Health check: http://localhost:5000/health")
-    print(f"✅ API endpoint: http://localhost:5000/check-plagiarism")
+    print(f" Server running on: http://localhost:5000")
+    print(f" Health check: http://localhost:5000/health")
+    print(f" API endpoint: http://localhost:5000/check-plagiarism")
     print("="*60 + "\n")
     
     app.run(debug=True, host='0.0.0.0', port=5000)
